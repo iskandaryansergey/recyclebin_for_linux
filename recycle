@@ -1,0 +1,198 @@
+#!/bin/bash
+# This script will implement recycle bin for the *nix based systems
+# Due to *nix based repos do not have recycle bin 
+
+#Paths to the recyclebin and restore file
+recyclebin=$HOME/recyclebin
+restore_file=$HOME/.restore.info
+
+#How to use this script
+function usage {
+    echo  -e "usage: ./recycle/recycle.sh [-i] [-v] [-vv]  \e[1m\e[4mpath to file\e[0m\e[0m  "
+    echo "  -i      turn on interactive feature "
+    echo "  -v      turn on verbose feature "
+    echo "  -vv     turn on deep verbose feature, you will see which files and folders will remove from the mentioned folder. "
+    echo -e "  \e[1m\e[4mpath to file\e[0m\e[0m  can be  relative or absolute.  "
+    exit 1
+}
+
+#Adding record to the bashrc file and recycle script will available by name 
+function bashrc () {
+  if [[  $(grep "recycle" .bashrc) ]]
+  then 
+    echo -e "\n Adding recycle path to the PATH variable \n"
+    echo export PATH=$PATH:~/recycle >> ~/.bashrc 
+  fi
+}
+
+#Calliing bashrc function
+
+  bashrc
+
+#creating RecycleBin
+if [[ ! -d $recyclebin  ]]
+  then
+    mkdir $recyclebin
+fi  
+
+#creating Restore File
+if [[ ! -a $restore_file ]]
+  then
+    mkdir $restore_file
+fi
+
+#Main recycle funciton 
+function recycle () {
+for file in $@
+  do
+    if [[ -a  $file ]]
+      then
+        #Setting proper values for vars
+        full_path=$(readlink -f $file)
+        filename=$(readlink -f $file  | awk -F /  '{print $NF}')
+        file_type=$(file $full_path | cut -d : -f2 | tr -s ' ' | tr -d ' ' )
+        if [[ $interactive  ]]
+            then
+              #calling interactive prompt
+              inter_prompt
+
+              #if inter_prompt return 2 file will not be removed as per interactive prompt and will continue to the next option
+              if [[  $? -eq 2 ]] 
+                then
+                  echo -e "\n This < $filename > $file_type will be unotuched"
+                  continue
+              fi 
+        fi 
+        #calling move to trash function
+        move_to_trash   
+    else
+        echo -e "\n "$file" File do not exist \n" 
+        usage
+        break  
+    fi  
+done
+}
+
+function move_to_trash () {
+  if [[ -f $file  ]]
+    then
+      #Checking if filename exist in restore file
+      if [[ ! $(grep -q ${filename}_ $restore_file) ]]
+        then
+          trashed_file_name=${filename}_${inode}:${full_path}_$(date +"%H"_"%M"-"%F"  ) 
+          echo $trashed_file_name >> $restore_file 
+      else
+          trashed_file_name=${filename}_${inode}:${full_path}
+          echo $trashed_file_name >> $restore_file 
+      fi
+  elif [[ -d $file ]]
+    then
+      #Checking if Directory exist in restore file
+      if [[ ! $(grep -q ${filename}_dir $restore_file) ]]
+        then
+          trashed_dir_name=${filename}_dir_${full_path}_$(date +"%H"_"%M"-"%F"  )
+          echo $trashed_dir_name >> $restore_file 
+      else
+          trashed_dir_name=${filename}_dir_${full_path}
+          echo $trashed_dir_name >> $restore_file 
+      fi 
+  fi
+  #Calling trashing file function, that will move files or dirs to recyclebin
+  trashing_file 
+}
+
+function trashing_file () { 
+  #if option is directory moving to recyclebin
+  if [[ -d $file ]] 
+    then
+      echo "Moving  $file to trash"
+      #Advanced verbose mode
+      if [[  $verbose_flag -eq 2 ]]
+        then
+          for x in $file/*
+          do 
+            full_path=$(readlink -f $x)
+            filename=$(readlink -f $x  | awk -F /  '{print $NF}')
+            file_type=$(file $full_path | cut -d : -f2 | tr -s ' ' | tr -d ' ' )
+            echo -e " \n Removing the $filename $file_type  "
+          done
+      fi
+      #Checking if dir with the same name exist in recyclebin
+      if [[ ! -z  $(find recyclebin  -maxdepth 1 -name "$file") ]]
+        then
+          mv $file ${recyclebin}/${file}_$(date +"%H"_"%M"-"%F"  ) 
+      else
+          mv $file ${recyclebin}/${file}
+      fi
+  #if option is file moving to recyclebin      
+  else
+      echo -e " \n Removing $file $file_type"
+      mv $file ${recyclebin}/${file} 
+  fi
+}
+
+#Interactive prompt
+function inter_prompt () {
+  while true
+    do
+      echo "Do you want to remove this $file file [Y/n] ? "
+      read answer
+      case $answer 
+        in
+          [Yy]*)
+            echo -e "Your $file  $file_type  will removed \n"
+            remove=1
+            break
+            ;;
+          [Nn]*)
+            echo "This  $file $file_type  will be untouched "
+            remove=2
+            return 2
+            ;;
+          *)
+            echo -e  " \n Please type only Yes/No \n"
+            ;;
+      esac  
+    done  
+}
+
+         
+
+function main () {
+  #If options is less than one show usage
+	if [[ $# < 1  ]]
+	then	
+		usage
+	fi
+	#Optins cycle
+  for opt in $@
+   do	
+     case $opt
+       in	
+         -i)
+           echo -e "\n Choosen interactive mode \n"
+           shift
+           interactive=1
+           ;;
+         -v | -vv*) 
+           if [[  $opt == "-v" ]] 
+            then
+              verbose_flag=1
+           else
+              verbose_flag=2
+           fi
+           echo -e "\n Enter verbose mode $verbose_flag \n"
+           shift
+           ;;	
+         *)
+           #Exiting from loop 
+           break
+           ;;
+     esac
+  done
+
+#Calling main recycle function
+recycle $@	
+}
+#Calling main function
+main $@
