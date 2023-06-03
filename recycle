@@ -21,7 +21,7 @@ function bashrc () {
   if [[  $(grep "recycle" .bashrc) ]]
   then 
     echo -e "\n Adding recycle path to the PATH variable \n"
-    echo export PATH=$PATH:~/recyclebin_for_linux_unix >> ~/.bashrc 
+    echo export PATH=$PATH:~/recyclebin_for_linux >> ~/.bashrc 
   fi
 }
 
