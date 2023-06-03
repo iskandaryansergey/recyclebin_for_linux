@@ -1,8 +1,8 @@
-# RecycleBin_for_Unix
+# RecycleBin for Linux
 
 [![License](https://img.shields.io/github/license/iskandaryansergey/Prometheus-Cadvisor-Grafana)](LICENSE)
 
-Most **Linux** and **Unix**  distributions do not have  **recyclebin** on the command line. When you remove a file or directory, it is gone and cannot be restored. This project is a script that provides users with recycling which can be used to safely delete and restore files.
+Most **Linux**  distributions do not have  **recyclebin** on the command line. When you remove a file or directory, it is gone and cannot be restored. This project is a script that provides users with recycling which can be used to safely delete and restore files.
 
 ## Philosophy
 
