@@ -16,30 +16,6 @@ function usage {
     exit 1
 }
 
-#Adding record to the bashrc file and recycle script will available by name 
-function bashrc () {
-  if [[  $(grep "recycle" .bashrc) ]]
-  then 
-    echo -e "\n Adding recycle path to the PATH variable \n"
-    echo export PATH=$PATH:~/recyclebin_for_linux >> ~/.bashrc 
-  fi
-}
-
-#Calliing bashrc function
-
-  bashrc
-
-#creating RecycleBin
-if [[ ! -d $recyclebin  ]]
-  then
-    mkdir $recyclebin
-fi  
-
-#creating Restore File
-if [[ ! -a $restore_file ]]
-  then
-    mkdir $restore_file
-fi
 
 #Main recycle funciton 
 function recycle () {
