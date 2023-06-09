@@ -70,13 +70,18 @@ function trashing_file () {
       #Advanced verbose mode
       if [[  $verbose_flag -eq 2 ]]
         then
-          for x in "$file"/*
-          do 
-            full_path=$(readlink -f -- "$x")
-            filename=$(readlink -f -- "$x"  | awk -F /  '{print $NF}')
-            file_type=$(file -- "$full_path" | cut -d : -f2 | tr -s ' ' | tr -d ' ' )
-            echo -e " \n Removing the $filename $file_type  "
-          done
+          if  [[ -z "$(ls -A $file)"  ]]
+            then
+              echo "This $filename $file_type is empty"
+          else
+            for x in ${file}/*
+            do 
+              full_path_v=$(readlink -f -- "$x")
+              filename_v=$(readlink -f -- "$x"  | awk -F /  '{print $NF}')
+              file_type_v=$(file -- "$full_path_v" | cut -d : -f2 | tr -s ' ' | tr -d ' ' )
+              echo -e " \n Removing the $filename_v $file_type  "
+            done
+          fi
       fi
   fi
   #moving to recyclebin
