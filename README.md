@@ -45,7 +45,7 @@ Run install.sh
 ```
 The installation script creates all nesesar folders and files for this project. First, it creates a recyclebin folder and .restore.info file, after it creates symbolic links for the recycle and restore scripts in the first writable path from your  $PATH environment variable, that provide you ability to run scripts without mentioning absolute  path to the scripts. If install.sh ended without errors, you should see this.
 
-![Install pic]()
+![Install pic](https://github.com/iskandaryansergey/recyclebin_for_linux/blob/main/pics/install_screenshot.png)
 
 ### Recycle
 
@@ -59,11 +59,11 @@ You can see usage by typing recycle without any argument
 
 -i option provides you with the ability to run recycling in interactive mode. It means that you will be prompted about removal or not, before it is moved to recyclebin.
 
-![Recycle -i pic]()
+![Recycle -i pic](https://github.com/iskandaryansergey/recyclebin_for_linux/blob/main/pics/recycle_i_screenshot.png)
 
 -v or -vv provide verbose and deep verbose options. In deep verbose mode, when you recycle the directory it will show you all files and directories of removable folder.
 
-![Recycle -vv pic]()
+![Recycle -vv pic](https://github.com/iskandaryansergey/recyclebin_for_linux/blob/main/pics/recycle_vv_screenshot.png)
 
 ### Restore
 
@@ -78,7 +78,7 @@ restore
 After that you will see the list of files that can be restored, you should specify index of the file|dir you want to restore.
 By submitting the index you will be prompted to restore if -i option is specified, otherwise file|dir will be restored in original path.
 
-![Restore pic]()
+![Restore pic](https://github.com/iskandaryansergey/recyclebin_for_linux/blob/main/pics/restore_screenshot.png)
 
 
 > **Warning**  
