@@ -1,0 +1,160 @@
+#!/bin/bash
+#This script will implement restore functionality for recycling  script
+
+#Paths to the recyclebin and restore file
+recyclebin=$HOME/recyclebin
+restore_file=$HOME/.restore.info
+
+#How to use this script
+function usage {
+    echo  -e "usage: restore [-i] "
+    echo "  -i  turn on interactive feature "
+    exit 1
+}
+
+#Moving from recyclebin to original path
+function mover () {
+  #Checking if an object with the same name exists in the orginal path
+  if [[ -e "${path}${filename}" ]]
+    then
+      mv -- "${recyclebin}/${filename}_${date}" "${path}${filename}_${date}"
+  else
+  #recover to the original path with original name
+    if ! result=$({ mv -- "${recyclebin}/${filename}_${date}" "${path}${filename}" ;} 2>&1)
+      then
+        if grep -q "No such file or directory" <<< "$result"
+          then
+            echo "One of parent folders do not exist, please restore parrent and try to restore this $filename file again"
+            echo -e "Parent Path \e[1m\e[4m${path}\e[0m\e[0m  "
+        else
+            echo "$result"
+        fi 
+        exit 1
+    fi
+  fi
+  #Removing record from restore file
+  sed -i  "\#$log_line#d" "$restore_file" 
+  exit 0  
+}
+
+#Choosing a restorable file from the restored file's records
+function choose_rest_file () {
+  #declare array of items from restore file
+  declare -a ItemArray
+  index=0
+  #reading from restore file
+  while read -r row 
+    do
+    ItemArray[$index]=$row;
+    echo " (${index}) ${ItemArray[$index]} "
+    ((index++))
+    done < "$restore_file"
+    #choosing index
+    while true
+      do
+        read  -p "Please choose index of restorable file  "  rest_index
+        #regex pattern for integer checking
+        reg='^[0-9]+$'
+        if ! [[ $rest_index =~ $reg ]] 
+          then
+            echo "Please provide only one integer from this 1-${index} range"
+        elif  [[ "$rest_index" -gt "$index" ]] 
+          then
+            echo "Provided index should be less than $index "
+        else
+            rest_obj=${ItemArray[$rest_index]}
+            ItemArray=0
+            index=0
+            return
+        fi
+      done
+
+}
+
+function restore () {
+  if [[ -e $restore_file ]]
+    then
+      while true 
+        do
+          choose_rest_file
+          #regex pattern 
+          RE='([0-9]{2}_[0-9]{2}-[0-9]{4}-[0-9]{2}-[0-9]{2})_(dir_)?(/.*/)(.*)'
+          [[ $rest_obj =~ $RE ]]
+          log_line=${BASH_REMATCH[0]}
+          date=${BASH_REMATCH[1]}
+          dir=${BASH_REMATCH[2]}
+          path=${BASH_REMATCH[3]}
+          filename=${BASH_REMATCH[4]}
+          if [[ $interactive -eq 1 ]]
+            then
+              inter_prompt
+          fi
+          if [[  $? -eq 2 ]]
+            then
+              echo  -e " \n $rest_obj will be untouched"
+              break
+          fi
+          mover
+        done
+  else
+      echo -e "Restore file do not exist in your home directory \n  "
+      echo -e "Please ensure that installation script has been ended without error \n"
+      exit 1
+  fi
+
+}
+
+#Interactive prompt
+function inter_prompt () {
+  while true
+    do
+      echo "Do you want to restore this ${filename}_${date} file [Y/n] ? "
+      read answer
+      case $answer 
+        in
+          [Yy]*)
+            echo -e "\nYour ${filename}_${date} will restored \n"
+            break
+            ;;
+          [Nn]*)
+            echo -e "\nThis  ${filename}_${date}  will be untouched "
+            return 2
+            ;;
+          *)
+            echo -e  " \n Please type only Yes/No \n"
+            ;;
+      esac  
+    done  
+}
+
+function main () {
+  #If options is less than one show usage
+	if [[ $# -gt 2 ]]
+	then	
+		usage
+	fi
+	#Optins cycle
+  for opt in "$@"
+   do	
+     case $opt
+       in	
+         -i)
+           echo -e "\n Choosen interactive mode \n"
+           shift
+           interactive=1
+           ;;
+         *)
+           #Exiting from loop 
+           break
+           ;;
+     esac
+  done
+
+#Calling main recycle function
+restore "$@"	
+
+}
+
+#Calling main function
+main "$@"
+
